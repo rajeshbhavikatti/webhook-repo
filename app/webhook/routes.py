@@ -26,7 +26,6 @@ def receiver():
         to_branch = data['ref']
         request_id = data["head_commit"]["id"]
 
-      #timestamp = data["pull_request"]["created_at"]
       timestamp = datetime.datetime.now()
       
       print(request_id,action,author,from_branch,to_branch)
