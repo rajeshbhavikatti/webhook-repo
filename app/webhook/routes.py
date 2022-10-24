@@ -19,12 +19,14 @@ def receiver():
         to_branch = data["pull_request"]["base"]["ref"]
         from_branch = data["pull_request"]["head"]["ref"]
         request_id = data["pull_request"]["id"]
-      except KeyError:
+      except KeyError: #when data[action] is not present
         action="pushed"
         author = data["pusher"]['name']
         from_branch = data["base_ref"]
         to_branch = data['ref']
         request_id = data["head_commit"]["id"]
+      except: #when data has different values
+        print("No proper Data")
 
       timestamp = datetime.datetime.now()
       
