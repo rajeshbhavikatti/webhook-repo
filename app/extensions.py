@@ -9,7 +9,7 @@ mongo = MongoClient(mg_uri,serverSelectionTimeoutMS=5000)
 #create a database as "data" and collection as "webhook" using mongoDB site
 #get database and collection
 db = mongo.get_database("data") 
-hook = db.get_collection("webhook")
+logs = db.get_collection("webhook")
 
 #getting server details
 def server_connect():
