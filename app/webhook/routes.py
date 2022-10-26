@@ -1,5 +1,5 @@
 from flask import Blueprint, json, request,render_template,redirect
-from app.extensions import mongo,db,hook,server_connect
+from app.extensions import mongo,db,logs,server_connect
 from flask_pymongo import PyMongo
 import datetime
 
@@ -56,7 +56,7 @@ def webhook_home():
       suffix = ["st", "nd", "rd"][day % 10 - 1]
     return suffix
   #getting data from webhook collection
-  for task in hook.find().sort("timestamp",-1):
+  for task in logs.find().sort("timestamp",-1):
     task['author']=str(task['author'])
     task['request_id']  = str(task['request_id']) 
     task['from_branch'] = str(task['from_branch'])
