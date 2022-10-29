@@ -5,6 +5,7 @@
     <title>{{Title}}</title>
   </head>
   <body>
+    <div id="main">
     <h1>Action Repo Details</h1>
     {%for task in tasks%}
     <h5>
@@ -15,13 +16,28 @@
         "{{task.author}}" submitted a pull request from {{task.from_branch}} to {{task.to_branch}} on {{task.timestamp}}
       {%elif task.action =="opened"%}  <!-- For PULL_REQUEST action when new request is opened-->
         "{{task.author}}" submitted a pull request from {{task.from_branch}} to {{task.to_branch}} on {{task.timestamp}}
-      {%elif task.action =="synchronize"%} <!-- For MERGE action-->
+      {%elif task.action =="closed" and task.merge=="True" %} <!-- For MERGE action-->
         "{{task.author}}" merged branch {{task.from_branch}} to {{task.to_branch}} on {{task.timestamp}}
       {%elif task.action =="closed"%}  <!-- For PULL_REQUEST action when a request is closed-->
         "{{task.author}}" closed a pull request from {{task.from_branch}} to {{task.to_branch}} on {{task.timestamp}}
       {%endif%}
     </h5>
     {%endfor%}
+
+  </div>
+    <script>
+      let url = "https://supreme-alabaster-mandrill.glitch.me/webhook/ui/update"
+      setInterval(function(){
+        fetch(url)
+    .then(response => response.json())  
+    .then(data => {console.log("updating");
+                  let optionalHTML= data.task;
+                   document.getElementById("main").innerHTML= optionalHTML;
+                  });
+      },15000);
+      
+    </script>
+    
     
   </body>
 </html>

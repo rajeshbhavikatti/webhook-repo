@@ -1,5 +1,5 @@
-from flask import Blueprint, json, request,render_template,redirect
-from app.extensions import mongo,db,logs,server_connect
+from flask import Blueprint, json, request,render_template,redirect,jsonify,make_response
+from app.extensions import mongo,db,hook,server_connect,suffix,convert,last_id
 from flask_pymongo import PyMongo
 import datetime
 
@@ -19,18 +19,20 @@ def receiver():
         to_branch = data["pull_request"]["base"]["ref"]
         from_branch = data["pull_request"]["head"]["ref"]
         request_id = data["pull_request"]["id"]
-      except KeyError: #when data[action] is not present
+        merge = data["pull_request"]["merged"]
+      except KeyError as ker:
+        print(ker)
         action="pushed"
         author = data["pusher"]['name']
         from_branch = data["base_ref"]
         to_branch = data['ref']
         request_id = data["head_commit"]["id"]
-      except: #when data has different values
-        print("No proper Data")
+        merge = "false"
 
+      #timestamp = data["pull_request"]["created_at"]
       timestamp = datetime.datetime.now()
       
-      print(request_id,action,author,from_branch,to_branch)
+      print(request_id,action,author,from_branch,to_branch,merge)
       print(server_connect())
       
       #Adding Data to MongoDB
@@ -40,6 +42,7 @@ def receiver():
         "action":action,
         "from_branch":from_branch,
         "to_branch":to_branch,
+        "merge": merge,
         "timestamp":timestamp,})
     else:
       print("No data Received")
@@ -47,24 +50,19 @@ def receiver():
 
 @webhook.route('/ui',methods=["GET"])
 def webhook_home():
-  tasks=[]
-  def suffix(day):
-    suffix = ""
-    if 4 <= day <= 20 or 24 <= day <= 30:
-      suffix = "th"
-    else:
-      suffix = ["st", "nd", "rd"][day % 10 - 1]
-    return suffix
   #getting data from webhook collection
-  for task in logs.find().sort("timestamp",-1):
-    task['author']=str(task['author'])
-    task['request_id']  = str(task['request_id']) 
-    task['from_branch'] = str(task['from_branch'])
-    task['to_branch'] = str(task['to_branch'])
-    task['action'] = str(task['action'])
-    time = task['timestamp'] = task['timestamp'].strftime("%d{} %B %Y - %I %M:%p %z UTC".format(suffix(task['timestamp'].day)))
-    tasks.append(task)
-  for task in tasks:
-    print(task['action'],time)
-    
-  return render_template("base.html",Title="TRX Assessment",tasks=tasks)
+  tasks=convert(hook.find().sort("timestamp",-1).limit(5))
+  last = last_id(hook.find().sort("timestamp",-1).limit(1))
+  global id 
+  id = last[0]["_id"]
+  print(last[0]["_id"])
+  return render_template("base.html",Title="TRX Assessment",tasks=tasks,update=webhook_update)
+
+
+
+@webhook.route('/ui/update',methods=["GET"])
+def webhook_update():
+  tasks=convert(hook.find({"_id":{"$gte":id}}).sort("timestamp",-1))
+  page = render_template("base.html",Title="TRX Assessment",tasks=tasks,update=webhook_update)
+  return {"task":page}
+  
