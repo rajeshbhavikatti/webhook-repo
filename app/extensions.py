@@ -13,6 +13,7 @@ hook = db.get_collection("webhook")
 
 #getting server details
 def server_connect():
+  """checks mongodb server connection"""
   try:
     db_details=mongo.server_info()
   except Exception:
@@ -20,6 +21,7 @@ def server_connect():
   return db_details
 
 def suffix(day):
+    """returns suffix to be added to a date """
     suffix = ""
     if 4 <= day <= 20 or 24 <= day <= 30:
       suffix = "th"
@@ -27,6 +29,7 @@ def suffix(day):
       suffix = ["st", "nd", "rd"][day % 10 - 1]
     return suffix
 def convert(tasks): 
+  """return list for converting recieved monogodb entries"""
   logs=[]
   for task in tasks :
     task['_id'] = str(task['_id'])
@@ -41,6 +44,7 @@ def convert(tasks):
   return logs   
 
 def last_id(tasks):
+  """return list of data without converting it into type string usefull for getting ObjectId for mongodb entry"""
   last=[]
   for task in tasks: 
     last.append(task)

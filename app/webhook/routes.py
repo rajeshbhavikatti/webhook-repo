@@ -7,37 +7,37 @@ webhook = Blueprint('Webhook', __name__, url_prefix='/webhook')
 
 @webhook.route('/receiver', methods=["POST"])
 def receiver():
-    if request.headers["Content-Type"]  ==  "application/json":
-      info = json.dumps(request.json)
-      print(info)
-      #Getting the webhook data in form of dictionary
-      data = request.json 
-      #declaring variables for MongoDB
+    """Receive the data from Github webhook and Insert the data into mongoDB"""
+    if request.headers["Content-Type"]  ==  "application/json":           #check if received content type is json type
+      info = json.dumps(request.json) #set variable to received data
+      #print(info)                    #check received data
+      data = request.json             #Getting the webhook data in form of dictionary                                
       try:
-        action = data["action"]
-        author = data["pull_request"]["user"]["login"]
-        to_branch = data["pull_request"]["base"]["ref"]
-        from_branch = data["pull_request"]["head"]["ref"]
-        request_id = data["pull_request"]["id"]
-        merge = data["pull_request"]["merged"]
+        """#assigning variables to received data for tansfering into MongoDB"""
+        action = data["action"]                            #which action is performed
+        author = data["pull_request"]["user"]["login"]     #author of the action
+        to_branch = data["pull_request"]["base"]["ref"]    #to which branch the action is performed
+        from_branch = data["pull_request"]["head"]["ref"]  #from which branch the action is performed
+        request_id = data["pull_request"]["id"]            #id of the action performed
+        merge = data["pull_request"]["merged"]             #Boolean value of merge request
       except KeyError as ker:
-        print(ker)
-        action="pushed"
-        author = data["pusher"]['name']
-        from_branch = data["base_ref"]
-        to_branch = data['ref']
-        request_id = data["head_commit"]["id"]
-        merge = "false"
+        """Handling error if the received data does not have required data"""
+        #print(ker)                                        #verify error
+        action="pushed"                                    #if there is no data on action then action is set to pushed
+        author = data["pusher"]['name']                    #author of action
+        from_branch = data["base_ref"]                     #from branch of the action
+        to_branch = data['ref']                            #to branch of the action
+        request_id = data["head_commit"]["id"]             #id of the action
+        merge = "false"                                    #False for merge as no merge operation is being performed
 
-      #timestamp = data["pull_request"]["created_at"]
-      timestamp = datetime.datetime.now()
+      timestamp = datetime.datetime.now()                  #variable for time
       
-      print(request_id,action,author,from_branch,to_branch,merge)
-      print(server_connect())
+      print(request_id,action,author,from_branch,to_branch,merge)      #verify variables value
+      print(server_connect())                                          #verify mongodb connection
       
       #Adding Data to MongoDB
       db.webhook.insert_one({
-        "request_id":request_id,
+        "request_id":request_id,                 #insert request_id variable into mongodb as request_id
         "author":author,
         "action":action,
         "from_branch":from_branch,
@@ -45,24 +45,29 @@ def receiver():
         "merge": merge,
         "timestamp":timestamp,})
     else:
-      print("No data Received")
-    return info, 200
+      print("No data Received")                  #if the data received is incorrect
+    return info, 200                              
 
 @webhook.route('/ui',methods=["GET"])
 def webhook_home():
+  """retriving data from mongodb to create a ui
+  return latest 5 mongodb entries to render as HTML 
+  """
   #getting data from webhook collection
-  tasks=convert(hook.find().sort("timestamp",-1).limit(5))
-  last = last_id(hook.find().sort("timestamp",-1).limit(1))
+  tasks=convert(hook.find().sort("timestamp",-1).limit(5))    #retrive latest 5 entries in hook collection and converting it into list
+  last = last_id(hook.find().sort("timestamp",-1).limit(1))   #retrive last id from mongodb 
   global id 
-  id = last[0]["_id"]
-  print(last[0]["_id"])
-  return render_template("base.html",Title="TRX Assessment",tasks=tasks,update=webhook_update)
+  id = last[0]["_id"]  #assigning last id as global variable id
+  print(last[0]["_id"]) #verify id
+  return render_template("base.html",Title="TRX Assessment",tasks=tasks)   
 
 
 
 @webhook.route('/ui/update',methods=["GET"])
 def webhook_update():
-  tasks=convert(hook.find({"_id":{"$gte":id}}).sort("timestamp",-1))
-  page = render_template("base.html",Title="TRX Assessment",tasks=tasks,update=webhook_update)
+  """return HTML content with mongodb content whose id are greater than global variable id"""
+  
+  tasks=convert(hook.find({"_id":{"$gte":id}}).sort("timestamp",-1))        #retrieve entries whose id is greater than global id and convert it into list
+  page = render_template("base.html",Title="TRX Assessment",tasks=tasks)    #convert the list into HTML format
   return {"task":page}
   
