@@ -54,11 +54,11 @@ def webhook_home():
   return latest 5 mongodb entries to render as HTML 
   """
   #getting data from webhook collection
-  tasks=convert(hook.find().sort("timestamp",-1).limit(5))    #retrive latest 5 entries in hook collection and converting it into list
+  tasks=convert(hook.find().sort("timestamp",-1).limit(5))    #retrive latest 3 entries in hook collection and converting it into list
   last = last_id(hook.find().sort("timestamp",-1).limit(1))   #retrive last id from mongodb 
   global id 
-  id = last[0]["_id"]  #assigning last id as global variable id
-  print(last[0]["_id"]) #verify id
+  id = last[0]["_id"]                                         #assigning last id as global variable id
+  #print(last[0]["_id"])                                       #verify id
   return render_template("base.html",Title="TRX Assessment",tasks=tasks)   
 
 

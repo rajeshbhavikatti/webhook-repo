@@ -16,6 +16,8 @@
         "{{task.author}}" submitted a pull request from {{task.from_branch}} to {{task.to_branch}} on {{task.timestamp}}
       {%elif task.action =="opened"%}  <!-- For PULL_REQUEST action when new request is opened-->
         "{{task.author}}" submitted a pull request from {{task.from_branch}} to {{task.to_branch}} on {{task.timestamp}}
+      {%elif task.action =="synchronize"%}  <!-- For synchronize action-->
+        "{{task.author}}" resolved confit between {{task.from_branch}} and {{task.to_branch}} on {{task.timestamp}}
       {%elif task.action =="closed" and task.merge=="True" %} <!-- For MERGE action-->
         "{{task.author}}" merged branch {{task.from_branch}} to {{task.to_branch}} on {{task.timestamp}}
       {%elif task.action =="closed"%}  <!-- For PULL_REQUEST action when a request is closed-->
